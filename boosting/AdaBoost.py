@@ -166,16 +166,26 @@ class AdaBoost:
             predictor, weighted_err = weak_leaner.fit(train, train_target, weights)
             confidence = 0.5 * np.log((1.0 - weighted_err) / weighted_err)
 
-            # accumulate final hypothesis
+            # accumulate final hypothesis on train
             predicts = predictor.predict(train)
             train_predicts += confidence * predicts
             train_predicts_signed = self.sign(train_predicts)
-            er = 1.0
+            train_er = 0.0
             for actual, pred in zip(train_target, train_predicts_signed):
                 if actual != pred:
-                    er += 1
-            print "iteration %s: feature %s, threshold %s, round_error %s, train_error: %s" % (
-                t, predictor.feature, predictor.threshold, weighted_err, er / m)
+                    train_er += 1
+
+            # accumulate final hypothesis on test
+            test_predicts += confidence * predictor.predict(test)
+            test_predicts_signed = self.sign(test_predicts)
+            test_er = 0.0
+            for actual, pred in zip(test_target, test_predicts_signed):
+                if actual != pred:
+                    test_er += 1
+
+            print "iteration %s: feature %s, threshold %s, round_error %s, train_error: %s, test_error: %s" % (
+                t, predictor.feature, predictor.threshold, weighted_err, train_er / m, test_er / len(test))
+
             # update weights
             for w in range(len(weights)):
                 tmp = np.sqrt(weighted_err / (1.0 - weighted_err))
