@@ -31,6 +31,8 @@ class FeatureThresholdPredictor(Predictor):
         Predictor.__init__(self)
         self.feature = feature
         self.threshold = threshold
+        # a boolean list indicate whether a data point get a wrong answer
+        self.predicts = None
 
     def predict_single(self, data_point):
         """
@@ -47,6 +49,9 @@ class FeatureThresholdPredictor(Predictor):
         :return: a np.array contains all labels of the test data set
         """
         return np.array([self.predict_single(t) for t in test])
+
+    def set_predicts(self, predict_labels, actual_labels):
+        self.predicts = predict_labels != actual_labels
 
 
 class WeakLearner:
@@ -74,8 +79,7 @@ class OptimalWeakLearner(WeakLearner):
 
     def __init__(self):
         WeakLearner.__init__(self)
-        self.predictors = {}
-        self.predict_results = {}
+        self.predictors = []
 
     def setup_predictors(self, train):
         """
@@ -85,13 +89,12 @@ class OptimalWeakLearner(WeakLearner):
         print "setup_predictors..."
         m, n = train.shape
         for f in range(n):
-            self.predictors[f] = self.generate_predictors_on_feature(train[:, f])
-        print self.predictors
+            self.generate_predictors_on_feature(f, train[:, f])
 
-    @staticmethod
-    def generate_predictors_on_feature(column):
+    def generate_predictors_on_feature(self, f, column):
         """
         Given a column, generate all possible threshold for this column
+        :param f: feature index
         :param column: a list of values for a feature
         :return: a list of threshold values
         """
@@ -100,12 +103,12 @@ class OptimalWeakLearner(WeakLearner):
         min_value = unique_values.min()
         max_value = unique_values.max()
 
-        thresholds = [min_value - 0.5]
+        self.predictors.append(FeatureThresholdPredictor(f, min_value - 0.5))
         if len(unique_values) > 1:
             for i in range(1, len(unique_values)):
-                thresholds.append((unique_values[i - 1] + unique_values[i]) / 2.0)
-        thresholds.append(max_value + 0.5)
-        return thresholds
+                p = FeatureThresholdPredictor(f, (unique_values[i - 1] + unique_values[i]) / 2.0)
+                self.predictors.append(p)
+        self.predictors.append(FeatureThresholdPredictor(f, max_value + 0.5))
 
     def fit(self, train, target, dist):
         """
@@ -116,51 +119,20 @@ class OptimalWeakLearner(WeakLearner):
         :return: a predictor that maximum abs(0.5 - error(h))
         """
         max_err = -1.0
-        best_error = 0
+        weighted_error = 0
         best_predictor = None
-        best_predicts = None
-        for f in self.predictors:
-            # print "OptimalWeakLearner: find best predictor on feature: %s with %s thresholds" % (f, len(thresholds))
-            for t in self.predictors[f]:
-                predictor = FeatureThresholdPredictor(f, t)
-                predicts = self.get_predict_result(f, t, predictor, train, target)
-                # error_h = self.weighted_error(target, predicts, dist)
-                error_h = dist[predicts].sum()
-                error = abs(0.5 - error_h)
-                if max_err < error:
-                    max_err = error
-                    best_error = error_h
-                    best_predictor = predictor
-                    best_predicts = predicts
-        return best_predictor, best_error, best_predicts
-
-    @staticmethod
-    def weighted_error(target, predicts, dist):
-        """
-        :param target: actual labels
-        :param predicts: predict labels
-        :param dist: weights for each data
-        """
-        err = 0.0
-        for p, t, d in zip(target, predicts, dist):
-            if p != t:
-                err += d
-        return err
-
-    def get_predict_result(self, f, t, predictor, train, target):
-        """
-        Retrieve predict labels from local cache,
-        if it is not exists, predict the given data set
-        and save the predicted labels into local cache
-        :param f: feature index
-        :param t: threshold value
-        :param predictor: decision stump
-        :param train: train data set
-        :return a list of predict labels on given data set
-        """
-        if (f, t) not in self.predict_results:
-            self.predict_results[(f, t)] = predictor.predict(train) != target
-        return self.predict_results[(f, t)]
+        for predictor in self.predictors:
+            if predictor.predicts is None:
+                hypothesis = predictor.predict(train)
+                predictor.set_predicts(hypothesis, target)
+            predicts = predictor.predicts
+            error_h = dist[predicts].sum()
+            error = abs(0.5 - error_h)
+            if max_err < error:
+                max_err = error
+                weighted_error = error_h
+                best_predictor = predictor
+        return best_predictor, weighted_error
 
 
 class AdaBoost:
@@ -191,8 +163,8 @@ class AdaBoost:
         test_predicts = np.zeros(len(test))
 
         for t in range(T):
-            predictor, weighted_err, predicts = weak_leaner.fit(train, train_target, weights)
-            confidence = 0.5 * np.exp((1.0 - weighted_err) / weighted_err)
+            predictor, weighted_err = weak_leaner.fit(train, train_target, weights)
+            confidence = 0.5 * np.log((1.0 - weighted_err) / weighted_err)
 
             # accumulate final hypothesis
             predicts = predictor.predict(train)
@@ -213,4 +185,10 @@ class AdaBoost:
 
     @staticmethod
     def sign(vals):
-        return np.array([-1.0 if v <= 0 else 1.0 for v in vals])
+        res = []
+        for v in vals:
+            if v <= 0:
+                res.append(-1.0)
+            else:
+                res.append(1.0)
+        return np.array(res)

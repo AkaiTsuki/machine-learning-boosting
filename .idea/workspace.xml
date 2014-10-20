@@ -2,13 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4f013f4a-0a60-45d7-aa9f-0178128b0277" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/boosting/AdaBoost.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/boosting/cross_validation.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/boosting/dataset.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/data/spambase.data" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/boosting/validation.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/main_boosting.py" afterPath="$PROJECT_DIR$/main_boosting.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/boosting/AdaBoost.py" afterPath="$PROJECT_DIR$/boosting/AdaBoost.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="machine-learning-boosting.iws" />
@@ -21,7 +15,7 @@
   </component>
   <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/machine-learning-boosting$main_boosting.coverage" NAME="main_boosting Coverage Results" MODIFIED="1413835899557" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/machine-learning-boosting$main_boosting.coverage" NAME="main_boosting Coverage Results" MODIFIED="1413837777138" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/machine-learning-boosting$AdaBoost.coverage" NAME="AdaBoost Coverage Results" MODIFIED="1413816666518" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/boosting" />
   </component>
   <component name="CreatePatchCommitExecutor">
@@ -39,8 +33,8 @@
       <file leaf-file-name="AdaBoost.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/boosting/AdaBoost.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.62618595" vertical-offset="2610" max-vertical-offset="3315">
-              <caret line="196" column="18" selection-start-line="196" selection-start-column="18" selection-end-line="196" selection-end-column="18" />
+            <state vertical-scroll-proportion="0.73904765" vertical-offset="2282" max-vertical-offset="2985">
+              <caret line="178" column="28" selection-start-line="178" selection-start-column="28" selection-end-line="178" selection-end-column="28" />
               <folding />
             </state>
           </provider>
@@ -414,13 +408,19 @@
       <created>1413753784481</created>
       <updated>1413753784481</updated>
     </task>
+    <task id="LOCAL-00001" summary="First Attempt for adaboost, something wrong">
+      <created>1413836080601</created>
+      <updated>1413836080601</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="4" y="22" width="1440" height="823" extended-state="6" />
     <editor active="false" />
     <layout>
-      <window_info id="Changes" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24283765" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Changes" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24350205" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24965894" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -429,7 +429,7 @@
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.34106413" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.34062928" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -475,6 +475,8 @@
     <option name="myTodoPanelSettings">
       <TodoPanelSettings />
     </option>
+    <MESSAGE value="First Attempt for adaboost, something wrong" />
+    <option name="LAST_COMMIT_MESSAGE" value="First Attempt for adaboost, something wrong" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -545,8 +547,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/boosting/AdaBoost.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.62618595" vertical-offset="2610" max-vertical-offset="3315">
-          <caret line="196" column="18" selection-start-line="196" selection-start-column="18" selection-end-line="196" selection-end-column="18" />
+        <state vertical-scroll-proportion="0.73904765" vertical-offset="2282" max-vertical-offset="2985">
+          <caret line="178" column="28" selection-start-line="178" selection-start-column="28" selection-end-line="178" selection-end-column="28" />
           <folding />
         </state>
       </provider>
