@@ -48,7 +48,7 @@ def confusion_matrix_analysis(cm):
     return error_rate, accuracy, fpr, tpr
 
 
-def confusion_matrix(actual, predict):
+def confusion_matrix(actual, predict, positive=1, negative=0):
     true_negative = 0
     true_positive = 0
     false_negative = 0
@@ -57,11 +57,11 @@ def confusion_matrix(actual, predict):
     for i in range(len(actual)):
         act_label = actual[i]
         pred_label = predict[i]
-        if act_label == 1 and pred_label == 0:
+        if act_label == positive and pred_label == negative:
             false_negative += 1
-        elif act_label == 0 and pred_label == 1:
+        elif act_label == negative and pred_label == positive:
             false_positive += 1
-        elif act_label == 1 and pred_label == 1:
+        elif act_label == positive and pred_label == positive:
             true_positive += 1
         else:
             true_negative += 1

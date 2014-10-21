@@ -1,7 +1,8 @@
 __author__ = 'jiachiliu'
 
 import numpy as np
-
+from validation import confusion_matrix, confusion_matrix_analysis
+from ranking import auc, roc
 
 class Predictor:
     """
@@ -170,21 +171,19 @@ class AdaBoost:
             predicts = predictor.predict(train)
             train_predicts += confidence * predicts
             train_predicts_signed = self.sign(train_predicts)
-            train_er = 0.0
-            for actual, pred in zip(train_target, train_predicts_signed):
-                if actual != pred:
-                    train_er += 1
+            train_cm = confusion_matrix(train_predicts_signed, train_target, 1.0, -1.0)
+            train_err, train_acc, train_fpr, train_tpr = confusion_matrix_analysis(train_cm)
 
             # accumulate final hypothesis on test
             test_predicts += confidence * predictor.predict(test)
             test_predicts_signed = self.sign(test_predicts)
-            test_er = 0.0
-            for actual, pred in zip(test_target, test_predicts_signed):
-                if actual != pred:
-                    test_er += 1
+            test_cm = confusion_matrix(test_predicts_signed, test_target, 1.0, -1.0)
+            test_err, test_acc, test_fpr, test_tpr = confusion_matrix_analysis(test_cm)
+            roc_points = roc(test_target, test_predicts, 1.0, -1.0)
+            test_auc = auc(roc_points[:, 1], roc_points[:, 0])
 
-            print "iteration %s: feature %s, threshold %s, round_error %s, train_error: %s, test_error: %s" % (
-                t, predictor.feature, predictor.threshold, weighted_err, train_er / m, test_er / len(test))
+            print "iteration %s: feature %s, threshold %s, round_error %s, train_error: %s, test_error: %s, auc: %s" % (
+                t, predictor.feature, predictor.threshold, weighted_err, train_err, test_err, test_auc)
 
             # update weights
             for w in range(len(weights)):
@@ -195,6 +194,12 @@ class AdaBoost:
 
     @staticmethod
     def sign(vals):
+        """
+        map every value in given value to +1 or -1. If the value is negative or zero map to -1
+        otherwise map to +1
+        :param vals: a list of value
+        :return: a list of -1 or +1 based on the value
+        """
         res = []
         for v in vals:
             if v <= 0:
