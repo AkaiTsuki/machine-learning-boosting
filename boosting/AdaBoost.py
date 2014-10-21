@@ -3,6 +3,8 @@ __author__ = 'jiachiliu'
 import numpy as np
 from validation import confusion_matrix, confusion_matrix_analysis
 from ranking import auc, roc
+import random
+
 
 class Predictor:
     """
@@ -136,13 +138,39 @@ class OptimalWeakLearner(WeakLearner):
         return best_predictor, weighted_error
 
 
+class RandomChooseLeaner(OptimalWeakLearner):
+    """
+    A random choose learner will randomly choose a predictor in its
+    predictor collection.
+    """
+
+    def __init__(self):
+        OptimalWeakLearner.__init__(self)
+
+    def fit(self, train, target, dist):
+        """
+        Fit the train data with random selected predictor
+        :param train: train data set
+        :param target: labels of train data set
+        :param dist: weights of each data point
+        :return: a random predictor with its weighted error
+        """
+        predictor = self.predictors[random.randint(0, len(self.predictors) - 1)]
+        if predictor.predicts is None:
+            hypothesis = predictor.predict(train)
+            predictor.set_predicts(hypothesis, target)
+        predicts = predictor.predicts
+        error_h = dist[predicts].sum()
+        return predictor, error_h
+
+
 class AdaBoost:
     """
     A implementation of AdaBoost algorithm
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, learner):
+        self.learner = learner
 
     def boost(self, train, train_target, test, test_target, T=100, converged=0.001):
         """
@@ -156,15 +184,14 @@ class AdaBoost:
         """
         m, n = train.shape
         weights = np.array([1.0 / m] * m)
-        weak_leaner = OptimalWeakLearner()
-        weak_leaner.setup_predictors(train)
+        self.learner.setup_predictors(train)
 
         # final hypothesis
         train_predicts = np.zeros(m)
         test_predicts = np.zeros(len(test))
 
         for t in range(T):
-            predictor, weighted_err = weak_leaner.fit(train, train_target, weights)
+            predictor, weighted_err = self.learner.fit(train, train_target, weights)
             confidence = 0.5 * np.log((1.0 - weighted_err) / weighted_err)
 
             # accumulate final hypothesis on train
