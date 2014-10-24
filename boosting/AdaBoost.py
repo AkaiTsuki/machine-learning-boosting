@@ -113,6 +113,11 @@ class OptimalWeakLearner(WeakLearner):
                 self.generate_predictors_on_discrete_feature(f, train[:, f])
 
     def generate_predictors_on_discrete_feature(self, f, column):
+        """
+        Given a column, generate all possible threshold for this column.
+        :param f: feature index
+        :param column: all values under the feature
+        """
         for v in np.unique(column):
             self.predictors.append(DiscreteFeatureThresholdPredictor(f, v))
 
@@ -121,7 +126,6 @@ class OptimalWeakLearner(WeakLearner):
         Given a column, generate all possible threshold for this column
         :param f: feature index
         :param column: a list of values for a feature
-        :return: a list of threshold values
         """
         unique_values = np.unique(column)
         unique_values = np.sort(unique_values)
@@ -193,13 +197,15 @@ class AdaBoost:
 
     def __init__(self, learner):
         self.learner = learner
+        self.predictors = []
+        self.confidence = []
 
     def boost(self, train, train_target, test, test_target, T=100, converged=0.001, discrete_features=None):
         """
-        Running AdaBoost on given dataset
-        :param train: train dataset
+        Running AdaBoost on given data set
+        :param train: train data set
         :param train_target: train labels
-        :param test: test dataset
+        :param test: test data set
         :param test_target: test labels
         :param T: maximum of iteration
         :param converged: converge value
@@ -212,9 +218,15 @@ class AdaBoost:
         train_predicts = np.zeros(m)
         test_predicts = np.zeros(len(test))
 
+        final_acc = 0
+        final_auc = 0
+        final_err = 0
+
         for t in range(T):
             predictor, weighted_err = self.learner.fit(train, train_target, weights)
             confidence = 0.5 * np.log((1.0 - weighted_err) / weighted_err)
+            self.predictors.append(predictor)
+            self.confidence.append(confidence)
 
             # accumulate final hypothesis on train
             predicts = predictor.predict(train)
@@ -231,6 +243,10 @@ class AdaBoost:
             roc_points = roc(test_target, test_predicts, 1.0, -1.0)
             test_auc = auc(roc_points[:, 1], roc_points[:, 0])
 
+            final_acc = test_acc
+            final_err = test_err
+            final_auc = test_auc
+
             print "iteration %s: feature %s, threshold %s, round_error %s, train_error: %s, test_error: %s, auc: %s" % (
                 t, predictor.feature, predictor.threshold, weighted_err, train_err, test_err, test_auc)
 
@@ -240,6 +256,19 @@ class AdaBoost:
                 if train_target[w] != predicts[w]:
                     tmp = np.sqrt((1.0 - weighted_err) / weighted_err)
                 weights[w] = (weights[w] * tmp) / (2.0 * np.sqrt(weighted_err * (1 - weighted_err)))
+
+        return final_acc, final_err, final_auc
+
+    def hypothesis(self, test):
+        """
+        Given a test data set, get the final hypothesis for each data
+        :param test: test data set
+        :return: hypothesis score for test data set
+        """
+        h = np.zeros(test.shape[0])
+        for i in range(len(self.confidence)):
+            h += self.confidence[i] * self.predictors[i].predict(test)
+        return h
 
     @staticmethod
     def sign(vals):
