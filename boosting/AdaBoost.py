@@ -57,6 +57,19 @@ class FeatureThresholdPredictor(Predictor):
         self.predicts = predict_labels != actual_labels
 
 
+class DiscreteFeatureThresholdPredictor(FeatureThresholdPredictor):
+    def __init__(self, feature, threshold):
+        FeatureThresholdPredictor.__init__(self, feature, threshold)
+
+    def predict_single(self, data_point):
+        """
+        Predict the label of given data point
+        :param data_point: a test data point without label
+        :return: the label of test data point, +1 of -1
+        """
+        return 1.0 if data_point[self.feature] == self.threshold else -1.0
+
+
 class WeakLearner:
     """
     A weak leaner will take train dataset and distribution of each data point in dataset
@@ -84,17 +97,26 @@ class OptimalWeakLearner(WeakLearner):
         WeakLearner.__init__(self)
         self.predictors = []
 
-    def setup_predictors(self, train):
+    def setup_predictors(self, train, discrete_features=None):
         """
         Given a train dataset, setup all possible feature-threshold pair as predictors
         :param train: train data set
         """
+        if not discrete_features:
+            discrete_features = []
         print "setup_predictors..."
         m, n = train.shape
         for f in range(n):
-            self.generate_predictors_on_feature(f, train[:, f])
+            if f not in discrete_features:
+                self.generate_predictors_on_numeric_feature(f, train[:, f])
+            else:
+                self.generate_predictors_on_discrete_feature(f, train[:, f])
 
-    def generate_predictors_on_feature(self, f, column):
+    def generate_predictors_on_discrete_feature(self, f, column):
+        for v in np.unique(column):
+            self.predictors.append(DiscreteFeatureThresholdPredictor(f, v))
+
+    def generate_predictors_on_numeric_feature(self, f, column):
         """
         Given a column, generate all possible threshold for this column
         :param f: feature index
@@ -172,7 +194,7 @@ class AdaBoost:
     def __init__(self, learner):
         self.learner = learner
 
-    def boost(self, train, train_target, test, test_target, T=100, converged=0.001):
+    def boost(self, train, train_target, test, test_target, T=100, converged=0.001, discrete_features=None):
         """
         Running AdaBoost on given dataset
         :param train: train dataset
@@ -184,7 +206,7 @@ class AdaBoost:
         """
         m, n = train.shape
         weights = np.array([1.0 / m] * m)
-        self.learner.setup_predictors(train)
+        self.learner.setup_predictors(train, discrete_features)
 
         # final hypothesis
         train_predicts = np.zeros(m)
