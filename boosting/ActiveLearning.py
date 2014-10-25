@@ -20,13 +20,13 @@ class ActiveLearning:
         RY = train_target[init_size:]
 
         while len(X) < upper_size:
-            print "Current train set size: %s " % len(X)
+            print "labeled data: %.2f%%" % (100.0 * len(X)/len(train))
             adaboost = AdaBoost(OptimalWeakLearner())
             adaboost.boost(X, Y, test, test_target)
             H = adaboost.hypothesis(R)
             H_abs = np.abs(H)
             sorted_indices = H_abs.argsort().tolist()
-            selected = sorted_indices[: increment_size]
+            selected = sorted_indices[:increment_size]
             remained = sorted_indices[increment_size:]
 
             X = np.vstack((X, R[selected]))
