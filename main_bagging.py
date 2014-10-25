@@ -6,6 +6,15 @@ from boosting.Bagging import Bagging
 
 train, target = load_spambase()
 train, test, train_target, test_target = train_test_shuffle_split(train, target, len(train) / 10)
-bagging = Bagging()
-bagging.bagging(train, train_target, test, test_target)
+res = []
+param = 0.05
+
+while param < 0.5:
+    print "Choose %.2f%% of data" % (param * 100)
+    bagging = Bagging()
+    acc, err, auc = bagging.bagging(train, train_target, test, test_target, param=param)
+    res.append((acc, err, auc))
+    param += 0.05
+
+print res
 

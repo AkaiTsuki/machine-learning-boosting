@@ -11,10 +11,10 @@ class Bagging:
     def __init__(self):
         self.round_predicts = []
 
-    def bagging(self, train, train_target, test, test_target, T=50):
+    def bagging(self, train, train_target, test, test_target, T=50, param=0.05):
         t = 0
         indices = range(len(train))
-        choose_size = int(len(train) * 0.05)
+        choose_size = int(len(train) * param)
         while t < T:
             print "Round %s" % (t + 1)
             choose_indices = random.sample(indices, choose_size)
@@ -46,3 +46,4 @@ class Bagging:
         roc_points = roc(test_target, test_predicts)
         test_auc = auc(roc_points[:, 1], roc_points[:, 0])
         print "test error: %s, test acc: %s, auc: %s" % (test_err, test_acc, test_auc)
+        return test_acc, test_err, test_auc
