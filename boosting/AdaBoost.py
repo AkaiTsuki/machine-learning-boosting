@@ -4,6 +4,7 @@ import numpy as np
 from validation import confusion_matrix, confusion_matrix_analysis
 from ranking import auc, roc
 import random
+import sys
 
 
 class Predictor:
@@ -111,6 +112,7 @@ class OptimalWeakLearner(WeakLearner):
                 self.generate_predictors_on_numeric_feature(f, train[:, f])
             else:
                 self.generate_predictors_on_discrete_feature(f, train[:, f])
+        print "setup_predictors...finished"
 
     def generate_predictors_on_discrete_feature(self, f, column):
         """
@@ -150,8 +152,11 @@ class OptimalWeakLearner(WeakLearner):
         max_err = -1.0
         weighted_error = 0
         best_predictor = None
+        count = 0
         for predictor in self.predictors:
             if predictor.predicts is None:
+                count += 1
+                self.print_progress(count, len(self.predictors))
                 hypothesis = predictor.predict(train)
                 predictor.set_predicts(hypothesis, target)
             predicts = predictor.predicts
@@ -162,6 +167,10 @@ class OptimalWeakLearner(WeakLearner):
                 weighted_error = error_h
                 best_predictor = predictor
         return best_predictor, weighted_error
+
+    def print_progress(self, k, max_loop):
+        sys.stdout.write("\rProgress: %s/%s" % (k+1, max_loop))
+        sys.stdout.flush()
 
 
 class RandomChooseLeaner(OptimalWeakLearner):
@@ -271,7 +280,7 @@ class AdaBoost:
         return h
 
     @staticmethod
-    def sign(vals):
+    def sign(vals, negative=-1.0, postive=1.0):
         """
         map every value in given value to +1 or -1. If the value is negative or zero map to -1
         otherwise map to +1
@@ -281,7 +290,7 @@ class AdaBoost:
         res = []
         for v in vals:
             if v <= 0:
-                res.append(-1.0)
+                res.append(negative)
             else:
-                res.append(1.0)
+                res.append(postive)
         return np.array(res)
