@@ -12,22 +12,27 @@ class ECOC:
         self.selected_code = self.random_select(20)
         self.functions = []
 
-    def train(self, train, train_target, test, test_target, T=100):
+    def train(self, train, train_target, test, test_target, T=100, percentage = 0.5):
         k, n = self.selected_code.shape
-
-        percentage = 0.2
 
         train = train[:int(len(train) * percentage)]
         train_target = train_target[:int(len(train_target) * percentage)]
-
+        first_time = True
+        predictors = None
         for f in range(n):
             print "Run Adaboost on function %f" % f
             codes = self.selected_code[:, f]
             labels = self.convert_to_binary(train_target, codes)
             test_labels = self.convert_to_binary(test_target, codes)
-            adaboost = AdaBoost(OptimalWeakLearner())
-            adaboost.boost(train, labels, test, test_labels, T)
+            learner = OptimalWeakLearner()
+            if not first_time:
+                learner.set_predictors(predictors)
+            adaboost = AdaBoost(learner)
+            adaboost.boost(train, labels, test, test_labels, T, calculate_auc=False)
             self.functions.append(adaboost)
+            if first_time:
+                first_time = False
+                predictors = learner.get_predictors()
 
     def test(self, test):
         predicts = np.zeros((len(test), len(self.functions)))

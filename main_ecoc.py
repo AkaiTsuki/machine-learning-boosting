@@ -3,7 +3,7 @@ __author__ = 'jiachiliu'
 from boosting.ECOC import ECOC
 import numpy as np
 from boosting.cross_validation import shuffle
-
+import timeit
 
 def load_data(path, rows=11314, cols=1754):
     data = np.zeros((rows, cols))
@@ -28,6 +28,7 @@ def print_2d_array(array):
 
 
 if __name__ == '__main__':
+    start = timeit.default_timer()
     ecoc = ECOC(8)
     train, train_target = load_data('data/8newsgroup/train.trec/feature_matrix.txt', rows=11314)
     train, train_target = shuffle(train, train_target)
@@ -39,7 +40,7 @@ if __name__ == '__main__':
     print test_target.shape
 
     print_2d_array(ecoc.selected_code.tolist())
-    ecoc.train(train, train_target, test, test_target, T=200)
+    ecoc.train(train, train_target, test, test_target, T=200, percentage=1)
     labels = ecoc.test(test)
 
     err = 0
@@ -47,3 +48,5 @@ if __name__ == '__main__':
         if pred != act:
             err += 1
     print "Total error: %s" % (1.0 * err / len(test_target))
+    stop = timeit.default_timer()
+    print stop - start

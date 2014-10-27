@@ -3,6 +3,7 @@ __author__ = 'jiachiliu'
 from boosting.dataset import load_spambase
 from boosting.cross_validation import train_test_shuffle_split, k_fold_cross_validation, shuffle
 from boosting.AdaBoost import *
+import pylab as plt
 
 
 def optimal_weak_learner_on_random_data():
@@ -58,6 +59,15 @@ def optimal_weak_learner():
         overall_acc += acc
         overall_error += err
         fold += 1
+        if fold == 10:
+            hypo = adaboost.hypothesis(test)
+            roc_points = roc(test_target, hypo, 1.0, -1.0)
+            plt.xlabel('FPR')
+            plt.ylabel('TPR')
+            plt.xlim(xmin=0)
+            plt.ylim(ymin=0)
+            plt.scatter(roc_points[:, 1], roc_points[:, 0])
+            plt.show()
 
     print "Overall test accuracy: %s, overall test error: %s, overall test auc: %s" % (
         overall_acc / k, overall_error / k, overall_auc / k)
@@ -74,4 +84,4 @@ def random_weak_learner():
 
 
 if __name__ == '__main__':
-    optimal_weak_learner_on_random_data()
+    optimal_weak_learner()

@@ -36,7 +36,9 @@ class FeatureThresholdPredictor(Predictor):
         self.feature = feature
         self.threshold = threshold
         # a boolean list indicate whether a data point get a wrong answer
-        self.predicts = None
+        self.mismatch = None
+        # predict labels for each data
+        self.hypothesis = None
 
     def predict_single(self, data_point):
         """
@@ -54,8 +56,20 @@ class FeatureThresholdPredictor(Predictor):
         """
         return np.array([self.predict_single(t) for t in test])
 
-    def set_predicts(self, predict_labels, actual_labels):
-        self.predicts = predict_labels != actual_labels
+    def calculate_mismatch(self, predict_labels, actual_labels):
+        self.mismatch = predict_labels != actual_labels
+
+    def get_mismatch(self):
+        return self.mismatch
+
+    def set_mismatch(self, mismatch):
+        self.mismatch = mismatch
+
+    def set_hypothesis(self, hypo):
+        self.hypothesis = hypo
+
+    def get_hypothesis(self):
+        return self.hypothesis
 
 
 class DiscreteFeatureThresholdPredictor(FeatureThresholdPredictor):
@@ -97,6 +111,14 @@ class OptimalWeakLearner(WeakLearner):
     def __init__(self):
         WeakLearner.__init__(self)
         self.predictors = []
+
+    def set_predictors(self, predictors):
+        self.predictors = predictors
+        for p in self.predictors:
+            p.set_mismatch(None)
+
+    def get_predictors(self):
+        return self.predictors
 
     def setup_predictors(self, train, discrete_features=None):
         """
@@ -154,12 +176,15 @@ class OptimalWeakLearner(WeakLearner):
         best_predictor = None
         count = 0
         for predictor in self.predictors:
-            if predictor.predicts is None:
-                count += 1
+            if predictor.get_mismatch() is None:
                 self.print_progress(count, len(self.predictors))
-                hypothesis = predictor.predict(train)
-                predictor.set_predicts(hypothesis, target)
-            predicts = predictor.predicts
+                count += 1
+                if predictor.get_hypothesis() is None:
+                    hypothesis = predictor.predict(train)
+                    predictor.set_hypothesis(hypothesis)
+                hypothesis = predictor.get_hypothesis()
+                predictor.calculate_mismatch(hypothesis, target)
+            predicts = predictor.get_mismatch()
             error_h = dist[predicts].sum()
             error = abs(0.5 - error_h)
             if max_err < error:
@@ -169,7 +194,7 @@ class OptimalWeakLearner(WeakLearner):
         return best_predictor, weighted_error
 
     def print_progress(self, k, max_loop):
-        sys.stdout.write("\rProgress: %s/%s" % (k+1, max_loop))
+        sys.stdout.write("\rProgress: %s/%s" % (k + 1, max_loop))
         sys.stdout.flush()
 
 
@@ -191,10 +216,13 @@ class RandomChooseLeaner(OptimalWeakLearner):
         :return: a random predictor with its weighted error
         """
         predictor = self.predictors[random.randint(0, len(self.predictors) - 1)]
-        if predictor.predicts is None:
-            hypothesis = predictor.predict(train)
-            predictor.set_predicts(hypothesis, target)
-        predicts = predictor.predicts
+        if predictor.get_mismatch() is None:
+            if predictor.get_hypothesis() is None:
+                hypothesis = predictor.predict(train)
+                predictor.set_hypothesis(hypothesis)
+            hypothesis = predictor.get_hypothesis()
+            predictor.calculate_mismatch(hypothesis, target)
+        predicts = predictor.get_mismatch()
         error_h = dist[predicts].sum()
         return predictor, error_h
 
@@ -209,7 +237,8 @@ class AdaBoost:
         self.predictors = []
         self.confidence = []
 
-    def boost(self, train, train_target, test, test_target, T=100, converged=0.001, discrete_features=None):
+    def boost(self, train, train_target, test, test_target, T=100, converged=0.001, discrete_features=None,
+              calculate_auc=True):
         """
         Running AdaBoost on given data set
         :param train: train data set
@@ -221,7 +250,8 @@ class AdaBoost:
         """
         m, n = train.shape
         weights = np.array([1.0 / m] * m)
-        self.learner.setup_predictors(train, discrete_features)
+        if len(self.learner.get_predictors()) == 0:
+            self.learner.setup_predictors(train, discrete_features)
 
         # final hypothesis
         train_predicts = np.zeros(m)
@@ -238,7 +268,7 @@ class AdaBoost:
             self.confidence.append(confidence)
 
             # accumulate final hypothesis on train
-            predicts = predictor.predict(train)
+            predicts = predictor.get_hypothesis()
             train_predicts += confidence * predicts
             train_predicts_signed = self.sign(train_predicts)
             train_cm = confusion_matrix(train_predicts_signed, train_target, 1.0, -1.0)
@@ -249,15 +279,20 @@ class AdaBoost:
             test_predicts_signed = self.sign(test_predicts)
             test_cm = confusion_matrix(test_predicts_signed, test_target, 1.0, -1.0)
             test_err, test_acc, test_fpr, test_tpr = confusion_matrix_analysis(test_cm)
-            roc_points = roc(test_target, test_predicts, 1.0, -1.0)
-            test_auc = auc(roc_points[:, 1], roc_points[:, 0])
+            test_auc = 0
+            if calculate_auc:
+                roc_points = roc(test_target, test_predicts, 1.0, -1.0)
+                test_auc = auc(roc_points[:, 1], roc_points[:, 0])
 
             final_acc = test_acc
             final_err = test_err
             final_auc = test_auc
-
-            print "iteration %s: feature %s, threshold %s, round_error %s, train_error: %s, test_error: %s, auc: %s" % (
-                t, predictor.feature, predictor.threshold, weighted_err, train_err, test_err, test_auc)
+            if calculate_auc:
+                print "iteration %s: feature %s, threshold %s, round_error %s, train_error: %s, test_error: %s, auc: %s" % (
+                    t, predictor.feature, predictor.threshold, weighted_err, train_err, test_err, test_auc)
+            else:
+                print "iteration %s: feature %s, threshold %s, round_error %s, train_error: %s, test_error: %s" % (
+                    t, predictor.feature, predictor.threshold, weighted_err, train_err, test_err)
 
             # update weights
             for w in range(len(weights)):
@@ -280,7 +315,7 @@ class AdaBoost:
         return h
 
     @staticmethod
-    def sign(vals, negative=-1.0, postive=1.0):
+    def sign(vals, negative=-1.0, positive=1.0):
         """
         map every value in given value to +1 or -1. If the value is negative or zero map to -1
         otherwise map to +1
@@ -292,5 +327,5 @@ class AdaBoost:
             if v <= 0:
                 res.append(negative)
             else:
-                res.append(postive)
+                res.append(positive)
         return np.array(res)

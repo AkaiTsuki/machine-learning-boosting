@@ -52,7 +52,8 @@ active_learning_y = []
 for rec in active_learning:
     active_learning_y.append(rec[1])
 
-pl.plot(X, boosting_spambase_y, c="r")
-pl.plot(X, bagging_spambase_y, c="g")
-pl.plot(X, active_learning_y, c="b")
+boost = pl.plot(X, boosting_spambase_y, c="r", label='Boosting')
+bag = pl.plot(X, bagging_spambase_y, c="g", label='Bagging')
+active = pl.plot(X, active_learning_y, c="b", label='Active Learning')
+pl.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
 pl.show()
