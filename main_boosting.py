@@ -24,7 +24,7 @@ def optimal_weak_learner_on_random_data():
         Y = train_target[choose_indices]
 
         adaboost = AdaBoost(OptimalWeakLearner())
-        acc, err, auc = adaboost.boost(X, Y, test, test_target, discrete_features=[0, 3, 4, 5, 6, 8, 9, 11, 12])
+        acc, err, auc = adaboost.boost(X, Y, test, test_target)
         res.append((acc, err, auc))
         param += 0.05
 
@@ -53,13 +53,37 @@ def optimal_weak_learner():
         test_target = target[range(start, end)]
 
         adaboost = AdaBoost(OptimalWeakLearner())
-        acc, err, auc = adaboost.boost(k_fold_train, train_target, test, test_target)
+        plot = False
+        if fold == 1:
+            plot = True
+        else:
+            plot = False
+        acc, err, auc = adaboost.boost(k_fold_train, train_target, test, test_target, plot=plot)
+
+        if plot:
+            test_err_points = np.array(adaboost.test_err_array)
+            train_err_points = np.array(adaboost.train_err_array)
+            auc_points = np.array(adaboost.test_auc_array)
+            round_err_points = np.array(adaboost.weighted_err_array)
+            plt.xlabel('Round')
+            plt.ylabel('Error Rate')
+            plt.plot(test_err_points[:, 0], test_err_points[:, 1], c='r', label='Test Error')
+            plt.plot(test_err_points[:, 0], train_err_points[:, 1], c='g', label='Train Error')
+            plt.plot(test_err_points[:, 0], round_err_points[:, 1], c='b', label='Round Error')
+            plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
+            plt.show()
+
+            plt.xlabel('Round')
+            plt.ylabel('AUC')
+            plt.plot(test_err_points[:, 0], auc_points[:, 1], c='r', label='AUC')
+            plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
+            plt.show()
 
         overall_auc += auc
         overall_acc += acc
         overall_error += err
-        fold += 1
-        if fold == 10:
+
+        if fold == 1:
             hypo = adaboost.hypothesis(test)
             roc_points = roc(test_target, hypo, 1.0, -1.0)
             plt.xlabel('FPR')
@@ -68,6 +92,7 @@ def optimal_weak_learner():
             plt.ylim(ymin=0)
             plt.scatter(roc_points[:, 1], roc_points[:, 0])
             plt.show()
+        fold += 1
 
     print "Overall test accuracy: %s, overall test error: %s, overall test auc: %s" % (
         overall_acc / k, overall_error / k, overall_auc / k)

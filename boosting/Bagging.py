@@ -17,12 +17,15 @@ class Bagging:
         choose_size = int(len(train) * param)
         while t < T:
             print "Round %s" % (t + 1)
-            choose_indices = random.sample(indices, choose_size)
+            choose_indices = np.random.randint(0, len(train), len(train))
             X = train[choose_indices]
             Y = train_target[choose_indices]
             dt = DecisionTree()
-            dt.fit(X, Y, 4)
+            dt.fit(X, Y, 5)
             predicts = dt.predict(test)
+            test_cm = confusion_matrix(predicts, test_target)
+            test_err, test_acc, test_fpr, test_tpr = confusion_matrix_analysis(test_cm)
+            print "test error: %s, test acc: %s, " % (test_err, test_acc)
             self.round_predicts.append(predicts)
             t += 1
 

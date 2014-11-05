@@ -237,8 +237,13 @@ class AdaBoost:
         self.predictors = []
         self.confidence = []
 
+        self.weighted_err_array = []
+        self.train_err_array = []
+        self.test_err_array = []
+        self.test_auc_array = []
+
     def boost(self, train, train_target, test, test_target, T=100, converged=0.001, discrete_features=None,
-              calculate_auc=True):
+              calculate_auc=True, plot=False):
         """
         Running AdaBoost on given data set
         :param train: train data set
@@ -283,6 +288,13 @@ class AdaBoost:
             if calculate_auc:
                 roc_points = roc(test_target, test_predicts, 1.0, -1.0)
                 test_auc = auc(roc_points[:, 1], roc_points[:, 0])
+                if plot:
+                    self.test_auc_array.append([t, test_auc])
+
+            if plot:
+                self.weighted_err_array.append([t, weighted_err])
+                self.train_err_array.append([t, train_err])
+                self.test_err_array.append([t, test_err])
 
             final_acc = test_acc
             final_err = test_err
